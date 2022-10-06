@@ -1,5 +1,5 @@
 params = {
-    "enemies": [[1], [1, 2, 3]],
+    "enemies": [[7, 8], [1, 2, 3]],
     "population_size": [4, 5],
     "num_hidden_neurons": [10],
     "representation_size": [100],
