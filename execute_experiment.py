@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import pathlib
 import numpy as np
 from functools import partial
@@ -9,6 +10,7 @@ from typing import Callable
 from demo_controller import player_controller
 from evolution import (
     add_offspring_to_population,
+    create_offspring,
     doomsday_protocol,
     generate_population,
     evaluate,
@@ -24,23 +26,22 @@ np.random.seed(69)
 
 
 def execute_experiment(
+    experiment_tag: str,
     enemies: list,
     population_size: int,
     num_hidden_neurons: int,
-    representation_size: int,
-    representation_size_upper_limit: float,
-    representation_size_lower_limit: float,
     num_generations: int,
     mutate: Callable,
     crossover: Callable,
-    select_for_next_generation: Callable,
+    select_individuals_for_next_generation: Callable,
     fitness: Callable,
 ):
     # run experiement headless.
     os.environ["SDL_VIDEODRIVER"] = "dummy"
 
     # name experiment/run to save logs.
-    experiment_name = f"enemy_{''.join([str(e) for e in enemies])}-population_size_{population_size}-num_hidden_neurons_{num_hidden_neurons}-representation_size_{representation_size}-representation_size_upper_limit_{representation_size_upper_limit}-representation_size_lower_limit_{representation_size_lower_limit}-num_generations_{num_generations}-mutation_{mutate.keywords['method']}-crossover_{crossover.keywords['method']}-selection_{select_for_next_generation.keywords['method']}-fitness_{fitness.keywords['method']}"
+    experiment_name = f"{experiment_tag.upper()}-enemy_{''.join([str(e) for e in enemies])}-population_size_{population_size}-num_hidden_neurons_{num_hidden_neurons}-num_generations_{num_generations}-mutation_{mutate.keywords['method']}-crossover_{crossover.keywords['method']}-selection_{select_individuals_for_next_generation.keywords['method']}-fitness_{fitness.keywords['method']}"
+
     print(experiment_name)
 
     # create directory, if it does not already exist, to store runs.
@@ -65,8 +66,6 @@ def execute_experiment(
 
     # initialise population
     population = generate_population(
-        lower_limit=representation_size_lower_limit,
-        upper_limit=representation_size_upper_limit,
         population_size=population_size,
         num_sensors=EVOMAN_ENV.get_num_sensors(),
         num_hidden_neurons=num_hidden_neurons,
@@ -96,15 +95,18 @@ def execute_experiment(
     # track solution improvement
     solution_not_improved_count = 0
 
+    experiment_start_time = time.time()
+
     # start evolution
     for gen in range(1, num_generations + 1):
-        # generate offsprings via crossover between parents
-        offspring = crossover(
-            population=population, num_offspring=population.shape[0], method="uniform"
-        )
+        generation_start_time = time.time()
 
-        # mutate genotype
-        offspring = mutate(population=offspring)
+        # generate offsprings via crossover+mutation between parents
+        offspring = create_offspring(
+            population=population, crossover_method="onepoint", mutation_method="random"
+        )
+        print(population.shape)
+        print(offspring.shape)
 
         # evaluate the fitness of the offsprings
         offspring_fitness = evaluate(env=EVOMAN_ENV, population=offspring)
@@ -122,9 +124,11 @@ def execute_experiment(
         current_best_solution_normalised = normalise_array(current_best_solution)
 
         # select a subset from the new population
-
-        population, population_fitness = select_for_next_generation(
-            population=population, population_fitness=population_fitness, method="idk"
+        population, population_fitness = select_individuals_for_next_generation(
+            population=population,
+            population_fitness=population_fitness,
+            population_size=population_size,
+            method="idk",
         )
 
         # track solution for doomsday protocol
@@ -162,22 +166,41 @@ def execute_experiment(
         EVOMAN_ENV.update_solutions([population, population_fitness])
         EVOMAN_ENV.save_state()
 
+        generation_end_time = time.time()
+        print(
+            f"\n\nTime taken for generation {gen} :{generation_end_time - generation_start_time}"
+        )
+
+    experiment_end_time = time.time()
+    print(
+        f"\n\n\n\nTime taken for all generations:{experiment_end_time - experiment_start_time}"
+    )
+    print("=" * 50)
+
 
 if __name__ == "__main__":
-    from evolution import fitness, crossover, mutate, select_for_next_generation
+    import argparse
+    from evolution import (
+        fitness,
+        crossover,
+        mutate,
+        select_individuals_for_next_generation,
+    )
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("tag", help="Tag for experiment e.g. ea1")
+    args = parser.parse_args()
 
     execute_experiment(
+        experiment_tag=args.tag,
         enemies=[7, 8],
-        num_generations=2,
-        population_size=3,
+        num_generations=3,
+        population_size=5,
         num_hidden_neurons=4,
-        representation_size=5,
-        representation_size_upper_limit=1.0,
-        representation_size_lower_limit=-1.0,
-        crossover=partial(crossover, method="crossover2"),
+        crossover=partial(crossover, method="onepoint"),
         mutate=partial(mutate, method="mutation1"),
-        select_for_next_generation=partial(
-            select_for_next_generation, method="selection3"
+        select_individuals_for_next_generation=partial(
+            select_individuals_for_next_generation, method="selection3"
         ),
         fitness=partial(fitness, method="fitness4"),
     )

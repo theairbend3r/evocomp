@@ -3,8 +3,6 @@ from typing import Any
 
 
 def generate_population(
-    upper_limit: float,
-    lower_limit: float,
     population_size: int,
     num_sensors: int,
     num_hidden_neurons: int,
@@ -14,9 +12,7 @@ def generate_population(
         num_hidden_neurons + 1
     ) * 5
 
-    return np.random.uniform(
-        lower_limit, upper_limit, (population_size, representation_size)
-    )
+    return np.random.uniform(-1.0, 1.0, (population_size, representation_size))
 
 
 def simulate_game(env, population_row: np.ndarray) -> float:
@@ -59,17 +55,69 @@ def evaluate(env, population: np.ndarray) -> np.ndarray:
     return np.array([simulate_game(env, row) for row in population])
 
 
-def crossover(population: np.ndarray, num_offspring: int, method: str) -> np.ndarray:
-    """Create offspring.
+def select_parents_for_reproduction(population: np.ndarray) -> list:
+    """
 
     Parameters
     ----------
     population : np.ndarray
 
-    num_offspring : int
+
+    Returns
+    -------
+    list
+
+    """
+    # get indices for parents from population and shuffle them.
+    parent_idx = np.arange(population.shape[0])
+    np.random.shuffle(parent_idx)
+
+    # if odd number of parents, remove last parent.
+    if parent_idx.shape[0] % 2 != 0:
+        parent_idx = parent_idx[:-1]
+
+    # create combos of 2 parents.
+    parent_combos = np.split(parent_idx, np.arange(2, parent_idx.shape[0], 2))
+
+    return parent_combos
+
+
+def crossover(parent_1: np.ndarray, parent_2: np.ndarray, method: str) -> tuple:
+    """
+
+    Parameters
+    ----------
+    parent_1 : np.ndarray
+
+    parent_2 : np.ndarray
 
     method : str
 
+
+    Returns
+    -------
+    tuple
+
+    """
+    if parent_1.shape != parent_2.shape:
+        raise ValueError("Both parents should have same array shape.")
+
+    if method == "onepoint":
+        swap_point = np.random.randint(0, parent_1.shape[0])
+        offspring_1 = np.concatenate((parent_1[:swap_point], parent_2[swap_point:]))
+        offspring_2 = np.concatenate((parent_1[swap_point:], parent_2[:swap_point]))
+
+        return offspring_1, offspring_2
+
+
+def mutate(individual: np.ndarray, method: str) -> np.ndarray:
+    """
+
+    Parameters
+    ----------
+    individual : np.ndarray
+
+    method : str
 
 
     Returns
@@ -77,25 +125,59 @@ def crossover(population: np.ndarray, num_offspring: int, method: str) -> np.nda
     np.ndarray
 
     """
-    return population + 0.1
+    if method == "random":
+        flip_threshold = 0.5
+        flip_probs = np.random.uniform(0, 1, individual.shape[0])
+        individual = np.where(
+            flip_probs > flip_threshold,
+            individual + np.random.uniform(-1, 1),
+            individual,
+        )
+
+        return individual
 
 
-def mutate(method: str, population: np.ndarray) -> np.ndarray:
-    """Mutate offspring genotype.
+def create_offspring(
+    population: np.ndarray, crossover_method: str, mutation_method: str
+):
+    """
 
     Parameters
     ----------
-    method : str
-
     population : np.ndarray
+
+    crossover_method : str
+
+    mutation_method : str
 
 
     Returns
     -------
-    np.ndarray
+
 
     """
-    return population + 0.2
+    parent_combos = select_parents_for_reproduction(population=population)
+
+    offspring_list = []
+    for i in range(population[parent_combos].shape[0]):
+        parent_1, parent_2 = (
+            population[parent_combos][i][0],
+            population[parent_combos][i][1],
+        )
+
+        offspring_1, offspring_2 = crossover(
+            parent_1=parent_1, parent_2=parent_2, method=crossover_method
+        )
+
+        offspring_1 = mutate(individual=offspring_1, method=mutation_method)
+        offspring_2 = mutate(individual=offspring_2, method=mutation_method)
+
+        offspring_list.append(offspring_1)
+        offspring_list.append(offspring_2)
+
+    offspring_array = np.vstack(offspring_list)
+
+    return offspring_array
 
 
 def add_offspring_to_population(
@@ -105,7 +187,7 @@ def add_offspring_to_population(
     offspring_fitness: np.ndarray,
 ) -> tuple:
 
-    """Add offspring to population.
+    """
 
     Parameters
     ----------
@@ -148,10 +230,13 @@ def normalise_array(arr: np.ndarray) -> float:
         return 0.0000000001
 
 
-def select_for_next_generation(
-    population: np.ndarray, population_fitness: np.ndarray, method: str
+def select_individuals_for_next_generation(
+    population: np.ndarray,
+    population_fitness: np.ndarray,
+    population_size: int,
+    method: str,
 ) -> tuple:
-    """Selecy individuals for the next generation.
+    """
 
     Parameters
     ----------
@@ -159,19 +244,24 @@ def select_for_next_generation(
 
     population_fitness : np.ndarray
 
+    population_size : int
+
     method : str
 
 
     Returns
     -------
-    np.ndarray
+    tuple
 
     """
-    population_fitness_normalised = normalise_array(population_fitness)
-    population_fitness_probability = population_fitness_normalised / np.sum(
-        population_fitness_normalised, axis=0
-    )
-    return population, population_fitness
+    # subset population rows based on top-n fitness values.
+    top_n_fitness_idx = np.argpartition(population_fitness, -population_size)[
+        -population_size:
+    ]
+    top_n_population = population[top_n_fitness_idx]
+    top_n_population_fitness = population_fitness[top_n_fitness_idx]
+
+    return top_n_population, top_n_population_fitness
 
 
 def track_solution_improvement(

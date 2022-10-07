@@ -14,6 +14,11 @@ from execute_experiment import execute_experiment
 
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("tag", help="Tag for experiment e.g. ea1")
+    args = parser.parse_args()
 
     params_combo = list(itertools.product(*[v for v in params.values()]))
 
@@ -23,9 +28,6 @@ if __name__ == "__main__":
             "enemies",
             "population_size",
             "num_hidden_neurons",
-            "representation_size",
-            "representation_size_upper_limit",
-            "representation_size_lower_limit",
             "num_generations",
             "mutation",
             "crossover",
@@ -40,12 +42,10 @@ if __name__ == "__main__":
     for pc in params_combo:
         params_combo_list.append(
             (
+                args.tag,
                 pc.enemies,
                 pc.population_size,
                 pc.num_hidden_neurons,
-                pc.representation_size,
-                pc.representation_size_upper_limit,
-                pc.representation_size_lower_limit,
                 pc.num_generations,
                 partial(mutate, method=pc.mutation),
                 partial(crossover, method=pc.crossover),
