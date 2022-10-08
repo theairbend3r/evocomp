@@ -80,22 +80,34 @@ def crossover(population: np.ndarray, num_offspring: int, method: str) -> np.nda
     return population + 0.1
 
 
-def mutate(method: str, population: np.ndarray) -> np.ndarray:
+def mutate(population: np.ndarray, method: str) -> np.ndarray:
     """Mutate offspring genotype.
 
     Parameters
     ----------
-    method : str
-
     population : np.ndarray
 
+    method : str
 
     Returns
     -------
     np.ndarray
 
     """
-    return population + 0.2
+    # child_mutated = np.zeros(len(population))
+    child_mutated = np.zeros((0, population.shape[1]))
+    for i in range(0, len(population)):
+        for j in range(0, len(population[i])):
+            temp = np.zeros(len(population[i]))
+            temp[i] = population[i][j]
+            if np.random.uniform(0, 1) <= 0.3:  # 0.3 will differ based on tuning
+                temp[i] += np.random.normal(0, 1)
+                if temp[i] < -1:
+                    temp[i] = -1
+                elif temp[i] > 1:
+                    temp[i] = 1
+        child_mutated = np.vstack((child_mutated, temp))
+    return child_mutated
 
 
 def add_offspring_to_population(
