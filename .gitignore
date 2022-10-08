@@ -1,5 +1,6 @@
 # ignore log folders
-enemy*
+EA*
+multi_demo
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

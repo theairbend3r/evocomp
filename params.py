@@ -1,13 +1,13 @@
 params = {
     "enemies": [[7, 8], [1, 2, 3]],
     "population_size": [4, 5],
-    "num_hidden_neurons": [5],
+    "num_hidden_neurons": [10],
     "representation_size": [2],
     "representation_size_upper_limit": [1.0],
     "representation_size_lower_limit": [-1.0],
-    "num_generations": [1, 2],
+    "num_generations": [5, 5],
     "mutation": ["mutation_1", "mutation_2"],
-    "crossover": ["crossover_1"],
-    "selection": ["selection_1"],
-    "fitness": ["fitness_1"],
+    "crossover": ["onepoint", "uniform"],
+    "selection": ["selection_1", "selection_2"],
+    "fitness": ["fitness_1", "fitness_2"]
 }
