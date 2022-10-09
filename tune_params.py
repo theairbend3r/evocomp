@@ -6,7 +6,7 @@ from collections import namedtuple
 from evolution import (
     mutate,
     crossover,
-    select_for_next_generation,
+    select_individuals_for_next_generation,
     fitness,
 )
 from params import params
@@ -49,10 +49,10 @@ if __name__ == "__main__":
                 pc.num_generations,
                 partial(mutate, method=pc.mutation),
                 partial(crossover, method=pc.crossover),
-                partial(select_for_next_generation, method=pc.selection),
+                partial(select_individuals_for_next_generation, method=pc.selection),
                 partial(fitness, method=pc.fitness),
             )
         )
 
-    with Pool(processes=4) as pool:
+    with Pool(processes=12) as pool:
         pool.starmap(execute_experiment, params_combo_list)

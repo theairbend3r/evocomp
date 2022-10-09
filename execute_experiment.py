@@ -19,10 +19,7 @@ from evolution import (
     track_solution_improvement,
 )
 
-sys.path.insert(0, "evoman")
-from environment import Environment
-
-np.random.seed(69)
+from evoman.environment import Environment
 
 
 def execute_experiment(
@@ -49,7 +46,6 @@ def execute_experiment(
     if not log_folder.is_dir():
         log_folder.mkdir(parents=True, exist_ok=True)
 
-    # create evoman environment
     EVOMAN_ENV = Environment(
         experiment_name=experiment_name,
         enemies=enemies,
@@ -193,12 +189,12 @@ if __name__ == "__main__":
 
     execute_experiment(
         experiment_tag=args.tag,
-        enemies=[7, 8],
-        num_generations=3,
-        population_size=5,
-        num_hidden_neurons=4,
+        enemies=[5, 8],
+        num_generations=30,
+        population_size=100,
+        num_hidden_neurons=10,
         crossover=partial(crossover, method="onepoint"),
-        mutate=partial(mutate, method="mutation1"),
+        mutate=partial(mutate, method="random"),
         select_individuals_for_next_generation=partial(
             select_individuals_for_next_generation, method="selection3"
         ),

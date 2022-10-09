@@ -1,3 +1,5 @@
+from multiprocessing import Pool
+
 import numpy as np
 from typing import Any
 
@@ -52,7 +54,19 @@ def evaluate(env, population: np.ndarray) -> np.ndarray:
     np.ndarray
 
     """
-    return np.array([simulate_game(env, row) for row in population])
+    # with concurrent.futures.ProcessPoolExecutor() as executor:
+    #     results = executor.map(simulate_game, population)
+    #     final_result = np.array(list(results))
+    #
+    # return final_result
+    params_combo_list = [(
+        env,
+        population
+    )]
+
+    with Pool(processes=12) as pool:
+        pool.starmap(simulate_game, params_combo_list)
+    # return np.array([simulate_game(env, row) for row in population])
 
 
 def select_parents_for_reproduction(population: np.ndarray) -> list:
@@ -106,6 +120,7 @@ def crossover(parent_1: np.ndarray, parent_2: np.ndarray, method: str) -> tuple:
         swap_point = np.random.randint(0, parent_1.shape[0])
         offspring_1 = np.concatenate((parent_1[:swap_point], parent_2[swap_point:]))
         offspring_2 = np.concatenate((parent_1[swap_point:], parent_2[:swap_point]))
+        return offspring_1, offspring_2
 
 
 def mutate(individual: np.ndarray, method: str) -> np.ndarray:
@@ -128,7 +143,7 @@ def mutate(individual: np.ndarray, method: str) -> np.ndarray:
         child_mutated = np.zeros(len(individual))
         for i in range(0, len(individual)):
             child_mutated[i] = individual[i]
-            if np.random.uniform(0, 1) <= 0.3:  # 0.3 will differ based on tuning
+            if np.random.uniform(0, 1) <= flip_threshold:  # 0.3 will differ based on tuning
                 child_mutated[i] += np.random.normal(0, 1)
                 if child_mutated[i] < -1:
                     child_mutated[i] = -1
