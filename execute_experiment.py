@@ -28,12 +28,18 @@ np.random.seed(69)
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-n", "--experiment_name", help="Name for experiment e.g. ea1")
+parser.add_argument("-m", "--mode", help="Run mode e.g. train")
+parser.add_argument("-c", "--crossover", help="Crossover method e.g. uniform")
+parser.add_argument("-r", "--run", help="Current run, from 1 to 10")
 parser.add_argument("-e", "--enemies", nargs="+", help="Enemies (e.g. [1, 2])")
 args = parser.parse_args()
 
-experiment_name = args.experiment_name
+mode = args.mode
+crossover = args.crossover
+run = args.run
 enemies = args.enemies
+experiment_name = str(crossover) + '_' + run + '_enemies' + "".join(enemies)
+print("\n " + experiment_name)
 
 # create directory, if it does not already exist, to store runs.
 log_folder = pathlib.Path(f"./{experiment_name}")
@@ -101,9 +107,19 @@ def evaluate(population: np.ndarray) -> np.ndarray:
 # =========
 
 
+def test_experiment(experiment_name):
+    best_sol = np.loadtxt(experiment_name + '/best.txt')
+    print('\n RUNNING THE BEST SOLUTION \n')
+    EVOMAN_ENV.update_parameter('speed', 'normal')
+
+    with open("./test_results.txt", "a") as f:
+        f.write(
+            '\n' + str(evaluate([best_sol])[0]) + ' ' + str(crossover) + ' ' + str(
+                experiment_name.split('_')[1]) + ' ' + ''.join(enemies))
+    print("DONE TESTING " + str(evaluate([best_sol])[0]))
+
+
 def execute_experiment(
-    experiment_name: str,
-    enemies: list,
     population_size: int,
     num_hidden_neurons: int,
     num_generations: int,
@@ -111,31 +127,6 @@ def execute_experiment(
     select_individuals_for_next_generation: Callable,
     fitness: Callable,
 ):
-    # # run experiement headless.
-    # os.environ["SDL_VIDEODRIVER"] = "dummy"
-
-    # name experiment/run to save logs.
-    # experiment_name = f"{experiment_tag.upper()}-enemy_{''.join([str(e) for e in enemies])}-population_size_{population_size}-num_hidden_neurons_{num_hidden_neurons}-num_generations_{num_generations}-mutation_{mutate.keywords['method']}-crossover_{crossover.keywords['method']}-selection_{select_individuals_for_next_generation.keywords['method']}-fitness_{fitness.keywords['method']}"
-
-    # print(experiment_name)
-
-    # # create directory, if it does not already exist, to store runs.
-    # log_folder = pathlib.Path(f"./{experiment_name}")
-    # if not log_folder.is_dir():
-    #     log_folder.mkdir(parents=True, exist_ok=True)
-    #
-    # # create evoman environment
-    # EVOMAN_ENV = Environment(
-    #     experiment_name=experiment_name,
-    #     enemies=enemies,
-    #     multiplemode="yes",
-    #     playermode="ai",
-    #     player_controller=player_controller(num_hidden_neurons),
-    #     enemymode="static",
-    #     level=2,
-    #     speed="fastest",
-    # )
-
     # check environment state
     EVOMAN_ENV.state_to_log()
 
@@ -157,6 +148,9 @@ def execute_experiment(
 
     # update solution (population fitness)
     EVOMAN_ENV.update_solutions([population, population_fitness])
+
+    with open(experiment_name + "/results.txt", "a") as f:
+        f.write("\n\ngen best mean std")
 
     # write initial solution to file
     save_results(
@@ -252,23 +246,27 @@ def execute_experiment(
 
 
 if __name__ == "__main__":
-    from evolution import (
-        fitness,
-        create_offspring,
-        select_individuals_for_next_generation,
-    )
 
-    execute_experiment(
-        experiment_name=experiment_name,
-        enemies=[7, 8],
-        num_generations=3,
-        population_size=5,
-        num_hidden_neurons=10,
-        create_offspring=partial(
-            create_offspring, mutation_method="random", crossover_method="onepoint"
-        ),
-        select_individuals_for_next_generation=partial(
-            select_individuals_for_next_generation, method="selection3"
-        ),
-        fitness=partial(fitness, method="fitness4"),
-    )
+    if mode == 'train':
+        from evolution import (
+            fitness,
+            create_offspring,
+            select_individuals_for_next_generation,
+        )
+
+        execute_experiment(
+            num_generations=3,
+            population_size=5,
+            num_hidden_neurons=10,
+            create_offspring=partial(
+                create_offspring, mutation_method="random", crossover_method=crossover
+            ),
+            select_individuals_for_next_generation=partial(
+                select_individuals_for_next_generation, method="selection3"
+            ),
+            fitness=partial(fitness, method="fitness4"),
+        )
+
+    if mode == 'test':
+        test_experiment(experiment_name)
+

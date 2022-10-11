@@ -1,6 +1,5 @@
 import os
 import itertools
-import subprocess
 from functools import partial
 from collections import namedtuple
 
@@ -59,5 +58,5 @@ if __name__ == "__main__":
         )
 
         os.system(
-            f"python execute_experiment.py -n {experiment_name} -e {' '.join([str(e) for e in pc.enemies])}",
+            f"python execute_experiment.py -m train -c {pc.crossover} -r run -e {' '.join([str(e) for e in pc.enemies])}",
         )

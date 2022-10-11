@@ -107,6 +107,8 @@ def crossover(parent_1: np.ndarray, parent_2: np.ndarray, method: str) -> tuple:
         offspring_1 = np.concatenate((parent_1[:swap_point], parent_2[swap_point:]))
         offspring_2 = np.concatenate((parent_1[swap_point:], parent_2[:swap_point]))
 
+        return offspring_1, offspring_2
+
 
 def mutate(individual: np.ndarray, method: str) -> np.ndarray:
     """
@@ -340,7 +342,7 @@ def save_results(
 
     """
     with open(experiment_name + "/results.txt", "a") as f:
-        f.write("\n\ngen best mean std")
+        # f.write("\n\ngen best mean std")
         print(
             "\n GENERATION "
             + str(num_gen)
