@@ -28,17 +28,25 @@ np.random.seed(69)
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-m", "--mode", help="Run mode e.g. train")
-parser.add_argument("-c", "--crossover", help="Crossover method e.g. uniform")
-parser.add_argument("-r", "--run", help="Current run, from 1 to 10")
+parser.add_argument("-run", "--run", help="Current run, from 1 to 10")
+parser.add_argument("-mode", "--mode", help="Run mode e.g. train")
+parser.add_argument("-m", "--mutation", help="Mutation (e.g. 70)")
+parser.add_argument("-c", "--crossover", help="Crossover method e.g. uniform80")
 parser.add_argument("-e", "--enemies", nargs="+", help="Enemies (e.g. [1, 2])")
+parser.add_argument("-g", "--num_generations", help="Number of generations (e.g. 40)")
+parser.add_argument("-p", "--population_size", help="Population size (e.g. 40)")
 args = parser.parse_args()
 
-mode = args.mode
-crossover = args.crossover
 run = args.run
+mode = args.mode
+mutation = float(args.mutation)
+crossover = args.crossover
 enemies = args.enemies
-experiment_name = str(crossover) + '_' + run + '_enemies' + "".join(enemies)
+num_generations = int(args.num_generations)
+population_size = int(args.population_size)
+
+experiment_name = f"crossover_{crossover}__mutation_{mutation}__enemies_{''.join(enemies)}__population_{population_size}__generations_{num_generations}__run_{run}"
+print("=" * 50)
 print("\n " + experiment_name)
 
 # create directory, if it does not already exist, to store runs.
@@ -108,24 +116,33 @@ def evaluate(population: np.ndarray) -> np.ndarray:
 
 
 def test_experiment(experiment_name):
-    best_sol = np.loadtxt(experiment_name + '/best.txt')
-    print('\n RUNNING THE BEST SOLUTION \n')
-    EVOMAN_ENV.update_parameter('speed', 'normal')
+
+    start_time = time.time()
+    best_sol = np.loadtxt(experiment_name + "/best.txt")
+    print("\n RUNNING THE BEST SOLUTION \n")
+    EVOMAN_ENV.update_parameter("speed", "normal")
 
     with open("./test_results.txt", "a") as f:
         f.write(
-            '\n' + str(evaluate([best_sol])[0]) + ' ' + str(crossover) + ' ' + str(
-                experiment_name.split('_')[1]) + ' ' + ''.join(enemies))
-    print("DONE TESTING " + str(evaluate([best_sol])[0]))
+            "\n"
+            + str(evaluate([best_sol])[0])
+            + " "
+            + str(crossover)
+            + " "
+            + str(experiment_name.split("_")[-1])
+            + " "
+            + "".join(enemies)
+        )
+    end_time = time.time()
+
+    print(f"Time taken for testing a single run: {end_time - start_time}")
 
 
 def execute_experiment(
     population_size: int,
-    num_hidden_neurons: int,
     num_generations: int,
     create_offspring: Callable,
     select_individuals_for_next_generation: Callable,
-    fitness: Callable,
 ):
     # check environment state
     EVOMAN_ENV.state_to_log()
@@ -134,7 +151,7 @@ def execute_experiment(
     population = generate_population(
         population_size=population_size,
         num_sensors=EVOMAN_ENV.get_num_sensors(),
-        num_hidden_neurons=num_hidden_neurons,
+        num_hidden_neurons=10,
     )
 
     # get fitness of the 0th generation of the population
@@ -247,26 +264,24 @@ def execute_experiment(
 
 if __name__ == "__main__":
 
-    if mode == 'train':
+    if mode == "train":
         from evolution import (
-            fitness,
             create_offspring,
             select_individuals_for_next_generation,
         )
 
         execute_experiment(
-            num_generations=3,
-            population_size=5,
-            num_hidden_neurons=10,
+            num_generations=num_generations,
+            population_size=population_size,
             create_offspring=partial(
-                create_offspring, mutation_method="random", crossover_method=crossover
+                create_offspring,
+                mutation_percentage=mutation,
+                crossover_method=crossover,
             ),
             select_individuals_for_next_generation=partial(
                 select_individuals_for_next_generation, method="selection3"
             ),
-            fitness=partial(fitness, method="fitness4"),
         )
 
-    if mode == 'test':
+    if mode == "test":
         test_experiment(experiment_name)
-

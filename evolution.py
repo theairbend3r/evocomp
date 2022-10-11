@@ -110,7 +110,7 @@ def crossover(parent_1: np.ndarray, parent_2: np.ndarray, method: str) -> tuple:
         return offspring_1, offspring_2
 
 
-def mutate(individual: np.ndarray, method: str) -> np.ndarray:
+def mutate(individual: np.ndarray, mutation_percentage: str) -> np.ndarray:
     """
 
     Parameters
@@ -125,22 +125,23 @@ def mutate(individual: np.ndarray, method: str) -> np.ndarray:
     np.ndarray
 
     """
-    if method == "random":
-        flip_threshold = 0.5
-        child_mutated = np.zeros(len(individual))
-        for i in range(0, len(individual)):
-            child_mutated[i] = individual[i]
-            if np.random.uniform(0, 1) <= 0.3:  # 0.3 will differ based on tuning
-                child_mutated[i] += np.random.normal(0, 1)
-                if child_mutated[i] < -1:
-                    child_mutated[i] = -1
-                elif child_mutated[i] > 1:
-                    child_mutated[i] = 1
-        return child_mutated
+    # flip_threshold = 0.5
+    child_mutated = np.zeros(len(individual))
+    for i in range(0, len(individual)):
+        child_mutated[i] = individual[i]
+        if (
+            np.random.uniform(0, 1) <= mutation_percentage
+        ):  # 0.3 will differ based on tuning
+            child_mutated[i] += np.random.normal(0, 1)
+            if child_mutated[i] < -1:
+                child_mutated[i] = -1
+            elif child_mutated[i] > 1:
+                child_mutated[i] = 1
+    return child_mutated
 
 
 def create_offspring(
-    population: np.ndarray, crossover_method: str, mutation_method: str
+    population: np.ndarray, crossover_method: str, mutation_percentage: str
 ):
     """
 
@@ -150,7 +151,7 @@ def create_offspring(
 
     crossover_method : str
 
-    mutation_method : str
+    mutation_percentage : str
 
     Returns
     -------
@@ -171,8 +172,12 @@ def create_offspring(
             parent_1=parent_1, parent_2=parent_2, method=crossover_method
         )
 
-        offspring_1 = mutate(individual=offspring_1, method=mutation_method)
-        offspring_2 = mutate(individual=offspring_2, method=mutation_method)
+        offspring_1 = mutate(
+            individual=offspring_1, mutation_percentage=mutation_percentage
+        )
+        offspring_2 = mutate(
+            individual=offspring_2, mutation_percentage=mutation_percentage
+        )
 
         offspring_list.append(offspring_1)
         offspring_list.append(offspring_2)
@@ -363,7 +368,3 @@ def save_results(
             + " "
             + str(round(population_fitness_std, 6))
         )
-
-
-def fitness(method):
-    return f"fitness_{method}"
