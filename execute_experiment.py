@@ -23,7 +23,6 @@ from environment import Environment
 
 np.random.seed(69)
 
-# ===========
 # run experiement headless.
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
@@ -110,9 +109,6 @@ def evaluate(population: np.ndarray) -> np.ndarray:
         result = pool.map(simulate_game, params_combo_list)
 
     return np.array(result)
-
-
-# =========
 
 
 def test_experiment(experiment_name):

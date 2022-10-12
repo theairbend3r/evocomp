@@ -110,7 +110,7 @@ def crossover(parent_1: np.ndarray, parent_2: np.ndarray, method: str) -> tuple:
         return offspring_1, offspring_2
 
 
-def mutate(individual: np.ndarray, mutation_percentage: str) -> np.ndarray:
+def mutate(individual: np.ndarray, mutation_percentage: float) -> np.ndarray:
     """
 
     Parameters
@@ -141,7 +141,7 @@ def mutate(individual: np.ndarray, mutation_percentage: str) -> np.ndarray:
 
 
 def create_offspring(
-    population: np.ndarray, crossover_method: str, mutation_percentage: str
+    population: np.ndarray, crossover_method: str, mutation_percentage: float
 ):
     """
 

@@ -1,6 +1,7 @@
 import os
 import time
 import argparse
+from params import tuned_params
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--crossover", help="Crossover method e.g. uniform80")
@@ -8,9 +9,9 @@ args = parser.parse_args()
 
 crossover = args.crossover
 enemies = [[2, 8], [5, 6, 7]]
-mutation = 0.2
-num_generations = 3
-population_size = 5
+mutation = tuned_params["mutation"]
+num_generations = tuned_params["num_generations"]
+population_size = tuned_params["population_size"]
 
 start_time = time.time()
 num_runs = 10
