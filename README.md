@@ -37,3 +37,12 @@ python tune_params.py
 ```
 
 This will run a grid search based on parameters in the `params.py` file. The grid search uses multiprocessing.
+
+## Steps To Get Results
+
+1. `tune_params.py`
+2. `find best params list for each enemy group`
+3. `run_training.py` (repeat experiment with best params 10x4 for each combination)
+4. `run_testing.py` (test the best solution 5x)
+5. `test_the_best_against_the_rest.py` (test the best solution against all enemies one by one)
+6. `create_plots.py`
