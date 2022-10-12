@@ -37,10 +37,11 @@ max_idx_per_enemy = test_results_df.groupby(["crossover", "enemies"])[
     "fitness"
 ].idxmax()
 best_results_df = test_results_df.loc[max_idx_per_enemy]
-print(best_results_df)
 
-with open("./test_results_boxplots_all_enemies.txt", "a") as f:
-    f.write("\nexperiment_name fitness player_life enemy_life game_time enemy")
+with open(
+    "./results_of_best_against_all/test_results_boxplots_all_enemies.txt", "a"
+) as f:
+    f.write("\nexperiment_name fitness gain game_time enemy")
 
 for i in range(len(best_results_df)):
     experiment_run = best_results_df.iloc[i, :]["run"]
@@ -57,7 +58,21 @@ for i in range(len(best_results_df)):
         EVOMAN_ENV_TEST.update_parameter("enemies", [e])
         fitness, player_life, enemy_life, game_time = EVOMAN_ENV_TEST.play(best_sol)
 
-        with open("./test_results_boxplots_all_enemies.txt", "a") as f:
+        with open(
+            "./results_of_best_against_all/test_results_boxplots_all_enemies_all_solutions.txt",
+            "a",
+        ) as f:
             f.write(
-                f"\n{experiment_name} {fitness} {player_life} {enemy_life} {game_time} {e}"
+                f"\n{experiment_name} {fitness} {player_life - enemy_life} {game_time} {e}"
             )
+
+# best_experiment_name = find_best_experiment()
+# run_best_solution_5times()
+# "./results_of_best_against_all/test_results_boxplots_all_enemies_BEST_solutions.txt",
+# print(test_df)
+# test_df["is_gain_positive"] = test_df["gain"] > 0
+# experiment_name_list = list(test_df["experiment_name"].unique())
+# for exp in experiment_name_list:
+#     exp_df = test_df[test_df["experiment_name"] == exp]
+#     num_gain_positive = exp_df["is_gain_positive"].sum()
+#     print(exp, num_gain_positive)

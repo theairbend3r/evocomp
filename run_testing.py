@@ -17,7 +17,7 @@ start_time = time.time()
 num_runs = 5
 
 with open("./test_results_boxplots_groups_enemies.txt", "a") as f:
-    f.write("\nfitness crossover run enemies")
+    f.write("\nfitness gain crossover run enemies")
 
 paths = pathlib.Path("./")
 for d in paths.iterdir():
