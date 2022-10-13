@@ -115,7 +115,8 @@ def test_experiment(experiment_name):
 
     start_time = time.time()
     best_sol = np.loadtxt(experiment_name + "/best.txt")
-    EVOMAN_ENV.update_parameter("speed", "normal")
+    EVOMAN_ENV.update_parameter("speed", "fastest")
+    EVOMAN_ENV.update_parameter("enemies", [1, 2, 3, 4, 5, 6, 7, 8])
     fitness, player_life, enemy_life, game_time = EVOMAN_ENV.play(best_sol)
     print("\n RUNNING THE BEST SOLUTION \n")
 

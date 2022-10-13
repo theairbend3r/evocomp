@@ -10,6 +10,6 @@ params = {
 # params after tuning, needed for testing
 tuned_params = {
     "mutation": 0.2,
-    "population_size": 5,
-    "num_generations": 3,
+    "population_size": 100,
+    "num_generations": 30,
 }

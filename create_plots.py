@@ -1,6 +1,4 @@
-import os
 import pathlib
-import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -71,12 +69,12 @@ def create_lineplot():
             )
             plt.tight_layout()
 
-    fig.savefig("./plots/lineplot.png")
+    fig.savefig("./lineplot.png")
     plt.show()
 
 
 def create_boxplot_enemy_group():
-    test_df = pd.read_csv("./test_results_420.txt", delimiter=" ")
+    test_df = pd.read_csv("./test_results.txt", delimiter=" ")
     print(test_df)
 
     crossover = test_df["crossover"].unique().tolist()
@@ -85,7 +83,7 @@ def create_boxplot_enemy_group():
 
     fig, axes = plt.subplots(2, 2, figsize=(8, 6))
     fig.tight_layout()
-    fig.suptitle("Gain Box Plots for 2 Enemy Groups")
+    fig.suptitle("Gain Box Plots for Enemy Groups")
     for e in range(len(enemies)):
         for c in range(len(crossover)):
             # entities to plot
@@ -107,29 +105,23 @@ def create_boxplot_enemy_group():
             sns.boxplot(data=test_df_to_plot, ax=axes[e, c])
             axes[e, c].set(
                 ylabel="Individual Gain",
-                title=f"Crossover-{crossover[c]} Enemy-{enemies[e]}",
+                title=f"Trained on: {' '.join(str(enemies[e]))}, Tested on: All",
             )
             plt.tight_layout()
 
-    fig.savefig("./plots/boxplot_enemy_group.png")
+    fig.savefig("./boxplot_enemy_group.png")
     plt.show()
 
 
-def create_boxplot_enemy_all():
-    test_df = pd.read_csv(
-        "./results_of_best_against_all/test_results_boxplots_all_enemies_best_solution.txt",
-        delimiter=" ",
-    )
+def create_barplot():
+    df = pd.read_csv("./results_of_best_against_all/test_results_all_enemies.txt", delimiter=' ')
+    sns.barplot(data=df, x='enemy', y='gain').set(title='Best indvidual\'s gain against all enemies')
+    plt.savefig("./barplot_enemies.png")
 
-    sns.boxplot(data=test_df, x="enemy", y="fitness").set(
-        title="Individual Gain for Best Solution Against All Enemies"
-    )
-
-    plt.savefig("./plots/boxplot_enemy_all.png")
     plt.show()
 
 
 if __name__ == "__main__":
     create_lineplot()
     create_boxplot_enemy_group()
-    create_boxplot_enemy_all()
+    create_barplot()

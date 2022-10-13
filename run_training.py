@@ -8,7 +8,7 @@ parser.add_argument("-c", "--crossover", help="Crossover method e.g. uniform80")
 args = parser.parse_args()
 
 crossover = args.crossover
-enemies = [[2, 8], [5, 6, 7]]
+enemies = [[2, 8], [5, 6]]
 mutation = tuned_params["mutation"]
 num_generations = tuned_params["num_generations"]
 population_size = tuned_params["population_size"]
