@@ -13,7 +13,6 @@ from evolution import (
     add_offspring_to_population,
     doomsday_protocol,
     generate_population,
-    normalise_array,
     save_results,
     track_solution_improvement,
     select_individuals_for_next_generation,
@@ -207,7 +206,6 @@ def execute_experiment(
         # track results
         current_best_individual = np.argmax(population_fitness)
         current_best_solution = population_fitness[current_best_individual]
-        # current_best_solution_normalised = normalise_array(current_best_solution)
         population_fitness_mean = np.mean(population_fitness)
         population_fitness_std = np.std(population_fitness)
 
@@ -216,7 +214,6 @@ def execute_experiment(
             population=population,
             population_fitness=population_fitness,
             population_size=population_size,
-            method="idk",
         )
 
         # track solution for doomsday protocol

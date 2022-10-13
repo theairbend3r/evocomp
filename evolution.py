@@ -276,7 +276,6 @@ def select_individuals_for_next_generation(
     population: np.ndarray,
     population_fitness: np.ndarray,
     population_size: int,
-    method: str,
 ) -> tuple:
     """
 
