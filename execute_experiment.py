@@ -188,9 +188,7 @@ def execute_experiment(
         generation_start_time = time.time()
 
         # generate offsprings via crossover+mutation between parents
-        offspring = create_offspring(population=population)
-        print(population.shape)
-        print(offspring.shape)
+        offspring = create_offspring(population=population, population_fitness=population_fitness)
 
         # evaluate the fitness of the offsprings
         offspring_fitness = evaluate(population=offspring)
@@ -202,6 +200,11 @@ def execute_experiment(
             offspring=offspring,
             offspring_fitness=offspring_fitness,
         )
+
+        # when np.random.uniform(0,1) > percentage
+        unique_individuals_idx = np.unique(population, axis=0, return_index=True)[1]
+        population = population[unique_individuals_idx]
+        population_fitness = population_fitness[unique_individuals_idx]
 
         current_best_individual = np.argmax(population_fitness)
         current_best_solution = population_fitness[current_best_individual]

@@ -55,7 +55,7 @@ def evaluate(env, population: np.ndarray) -> np.ndarray:
     return np.array([simulate_game(env, row) for row in population])
 
 
-def select_parents_for_reproduction(population: np.ndarray) -> list:
+def select_parents_for_reproduction(population: np.ndarray, population_fitness: np.ndarray) -> list:
     """
 
     Parameters
@@ -68,16 +68,16 @@ def select_parents_for_reproduction(population: np.ndarray) -> list:
     list
 
     """
-    # get indices for parents from population and shuffle them.
-    parent_idx = np.arange(population.shape[0])
-    np.random.shuffle(parent_idx)
+    parent_combos = []
 
-    # if odd number of parents, remove last parent.
-    if parent_idx.shape[0] % 2 != 0:
-        parent_idx = parent_idx[:-1]
+    for i in range(population.shape[0]):
+        random_individuals_idx = np.random.randint(0, population.shape[0], 5)
+        random_individuals = population[random_individuals_idx]
+        random_individuals_fitness = population_fitness[random_individuals_idx]
+        random_individuals_fitness_top_2_idx = np.argpartition(random_individuals_fitness, -2)[-2:]
+        random_individuals_top_2 = random_individuals[random_individuals_fitness_top_2_idx]
 
-    # create combos of 2 parents.
-    parent_combos = np.split(parent_idx, np.arange(2, parent_idx.shape[0], 2))
+        parent_combos.append((random_individuals_top_2[0], random_individuals_top_2[1]))
 
     return parent_combos
 
@@ -99,15 +99,41 @@ def crossover(parent_1: np.ndarray, parent_2: np.ndarray, method: str) -> tuple:
     tuple
 
     """
+    crossover_method = method.split("-")[0]
+    crossover_percentage = float(method.split("-")[1])
+
     if parent_1.shape != parent_2.shape:
         raise ValueError("Both parents should have same array shape.")
 
-    if method == "onepoint":
-        swap_point = np.random.randint(0, parent_1.shape[0])
-        offspring_1 = np.concatenate((parent_1[:swap_point], parent_2[swap_point:]))
-        offspring_2 = np.concatenate((parent_1[swap_point:], parent_2[:swap_point]))
+    if np.random.uniform(0, 1) <= crossover_percentage:
+        if crossover_method == "sar":
 
-        return offspring_1, offspring_2
+            crossover_point = np.random.randint(0, parent_1.shape[0])
+            offspring_1 = np.zeros(parent_1.shape[0])
+            offspring_1[:crossover_point] = parent_1[:crossover_point]
+            offspring_1[crossover_point:] = (parent_1[crossover_point:] + parent_2[crossover_point:]) / 2
+
+            offspring_2 = np.zeros(parent_1.shape[0])
+            offspring_2[crossover_point:] = parent_1[crossover_point:]
+            offspring_2[:crossover_point] = (parent_1[:crossover_point] + parent_2[:crossover_point]) / 2
+
+            print(offspring_1.shape)
+            print(offspring_2.shape)
+
+            return offspring_1, offspring_2
+        elif crossover_method == "blend":
+            alpha = 0.5
+            u_1 = np.random.uniform(0, 1)
+            u_2 = np.random.uniform(0, 1)
+            gamma_1 = (1 - 2 * alpha) * u_1 - alpha
+            gamma_2 = (1 - 2 * alpha) * u_2 - alpha
+
+            offspring_1 = (1 - gamma_1) * parent_1 + gamma_1 * parent_2
+            offspring_2 = (1 - gamma_2) * parent_1 + gamma_2 * parent_2
+
+            return offspring_1, offspring_2
+
+    return parent_1, parent_2
 
 
 def mutate(individual: np.ndarray, mutation_percentage: float) -> np.ndarray:
@@ -125,13 +151,10 @@ def mutate(individual: np.ndarray, mutation_percentage: float) -> np.ndarray:
     np.ndarray
 
     """
-    # flip_threshold = 0.5
     child_mutated = np.zeros(len(individual))
     for i in range(0, len(individual)):
         child_mutated[i] = individual[i]
-        if (
-            np.random.uniform(0, 1) <= mutation_percentage
-        ):  # 0.3 will differ based on tuning
+        if np.random.uniform(0, 1) <= mutation_percentage:
             child_mutated[i] += np.random.normal(0, 1)
             if child_mutated[i] < -1:
                 child_mutated[i] = -1
@@ -141,7 +164,7 @@ def mutate(individual: np.ndarray, mutation_percentage: float) -> np.ndarray:
 
 
 def create_offspring(
-    population: np.ndarray, crossover_method: str, mutation_percentage: float
+    population: np.ndarray, population_fitness: np.ndarray, crossover_method: str, mutation_percentage: float
 ):
     """
 
@@ -159,14 +182,11 @@ def create_offspring(
 
     """
 
-    parent_combos = select_parents_for_reproduction(population=population)
-
+    parent_combos = select_parents_for_reproduction(population=population, population_fitness=population_fitness)
     offspring_list = []
-    for i in range(population[parent_combos].shape[0]):
-        parent_1, parent_2 = (
-            population[parent_combos][i][0],
-            population[parent_combos][i][1],
-        )
+    for i in range(len(parent_combos)):
+        parent_1 = parent_combos[i][0]
+        parent_2 = parent_combos[i][1]
 
         offspring_1, offspring_2 = crossover(
             parent_1=parent_1, parent_2=parent_2, method=crossover_method
@@ -321,7 +341,34 @@ def doomsday_protocol(population: np.ndarray, population_fitness: np.ndarray) ->
     tuple
 
     """
-    return population, population_fitness
+    # delete 10% random individuals from the population
+    num_random_individuals_to_eliminate = round(0.1 * population.shape[0])
+
+    random_individuals_to_eliminate_idx = np.random.randint(0, population.shape[0], num_random_individuals_to_eliminate)
+    random_individuals_to_keep_idx = np.ones(population.shape[0])
+    random_individuals_to_keep_idx[random_individuals_to_eliminate_idx] = False
+    new_population_without_random_individuals = population[random_individuals_to_keep_idx]
+    new_population_without_random_individuals_fitness = population_fitness[random_individuals_to_keep_idx]
+
+    # delete 10% worst individuals from the population
+    num_worst_individuals_to_eliminate = round(0.1 * new_population_without_random_individuals.shape[0])
+    bottom_n_fitness_idx = np.argpartition(new_population_without_random_individuals_fitness,
+                                           num_worst_individuals_to_eliminate)[
+                        :num_worst_individuals_to_eliminate
+                        ]
+    best_individuals_to_keep_idx = np.ones(new_population_without_random_individuals.shape[0])
+    best_individuals_to_keep_idx[bottom_n_fitness_idx] = False
+    new_population_without_worst_individuals = new_population_without_random_individuals[best_individuals_to_keep_idx]
+    new_population_without_worst_individuals_fitness = new_population_without_random_individuals_fitness[best_individuals_to_keep_idx]
+
+    # add new randomly created individuals
+    num_individuals_to_add = num_worst_individuals_to_eliminate + num_random_individuals_to_eliminate
+    new_individuals = np.random.rand(num_individuals_to_add, population.shape[1])
+    new_individual_fitness = evaluate(new_individuals)
+    new_population = np.vstack(new_population_without_worst_individuals, new_individuals)
+    new_population_fitness = np.vstack(new_population_without_worst_individuals_fitness, new_individual_fitness)
+
+    return new_population, new_population_fitness
 
 
 def save_results(
