@@ -3,8 +3,8 @@ import os
 import pathlib
 import numpy as np
 import pandas as pd
+from pprint import pprint
 
-from params import tuned_params
 from demo_controller import player_controller
 
 sys.path.insert(0, "evoman")
@@ -28,82 +28,70 @@ EVOMAN_ENV_TEST = Environment(
 )
 
 
-# mutation = tuned_params["mutation"]
-# num_generations = tuned_params["num_generations"]
-# population_size = tuned_params["population_size"]
+with open("./test_best_against_all.txt", "a") as f:
+    f.write("\nexperiment_name fitness gain game_time enemy iteration")
 
-# test_results_df = pd.read_csv("./test_results.txt", delimiter=" ")
-# max_idx_per_enemy = test_results_df.groupby(["crossover", "enemies"])[
-#     "fitness"
-# ].idxmax()
-# best_results_df = test_results_df.loc[max_idx_per_enemy]
 
-with open(
-    "./results_of_best_against_all/test_results_all_enemies.txt", "a"
-) as f:
-    f.write("\nexperiment_name fitness gain game_time enemy")
+test_df = pd.read_csv("./test_results_enemy_all.txt", delimiter=" ")
+test_df["is_gain_positive"] = test_df["gain"] > 0
+experiment_name_list = list(test_df["experiment_name"].unique())
 
-# best_experiment_name = find_best_experiment()
-# run_best_solution_5times()
-# "./results_of_best_against_all/test_results_boxplots_all_enemies_BEST_solutions.txt",
-# print(test_df)
-# test_df["is_gain_positive"] = test_df["gain"] > 0
-# experiment_name_list = list(test_df["experiment_name"].unique())
-# for exp in experiment_name_list:
-#     exp_df = test_df[test_df["experiment_name"] == exp]
-#     num_gain_positive = exp_df["is_gain_positive"].sum()
-#     print(exp, num_gain_positive)
+compare_dict = {
+    exp: {"num_gain_positive": 0, "avg_gain_value": 0} for exp in experiment_name_list
+}
 
-# for i in range(len(best_results_df)):
-    # experiment_run = best_results_df.iloc[i, :]["run"]
-    # experiment_crossover = best_results_df.iloc[i, :]["crossover"]
-    # enemies = best_results_df.iloc[i, :]["enemies"]
+for exp in experiment_name_list:
+    exp_df = test_df[test_df["experiment_name"] == exp]
+    num_gain_positive = exp_df["is_gain_positive"].sum()
+    avg_gain_value = exp_df["gain"].mean()
+    compare_dict[exp]["num_gain_positive"] = num_gain_positive
+    compare_dict[exp]["avg_gain_value"] = avg_gain_value
 
-best_experiment_name = "crossover_onepoint__mutation_0.2__enemies_28__population_100__generations_30__run_3/"
-run = best_experiment_name.split('__')[-1].split('_')[-1]
-mutation = best_experiment_name.split('__')[1].split('_')[-1]
-crossover = best_experiment_name.split('__')[0].split('_')[-1]
-enemies = best_experiment_name.split('__')[2].split('_')[-1]
-num_generations = best_experiment_name.split('__')[4].split('_')[-1]
-population_size = best_experiment_name.split('__')[3].split('_')[-1]
+highest_num_gain_positive = -1
+count_num_gain_positive = 0
 
-# experiment_name = f"crossover_{crossover}__mutation_{mutation}__enemies_{enemies}__population_{population_size}__generations_{num_generations}__run_{experiment_run}"
-# print(experiment_name)
+highest_avg_gain_value = 0
+best_experiment_name = None
+
+for exp in compare_dict:
+    if compare_dict[exp]["num_gain_positive"] == highest_num_gain_positive:
+        count_num_gain_positive += 1
+
+    if compare_dict[exp]["num_gain_positive"] > highest_num_gain_positive:
+        highest_num_gain_positive = compare_dict[exp]["num_gain_positive"]
+        best_experiment_name = exp
+
+if count_num_gain_positive > 0:
+    for exp in compare_dict:
+        if compare_dict[exp]["avg_gain_value"] > highest_avg_gain_value:
+            highest_avg_gain_value = compare_dict[exp]["avg_gain_value"]
+            best_experiment_name = exp
+
+print(best_experiment_name)
+
+if best_experiment_name is None:
+    raise ValueError("No best experiment found.")
+
+run = best_experiment_name.split("__")[-1].split("_")[-1]
+mutation = best_experiment_name.split("__")[1].split("_")[-1]
+crossover = best_experiment_name.split("__")[0].split("_")[-1]
+enemies = best_experiment_name.split("__")[2].split("_")[-1]
+num_generations = best_experiment_name.split("__")[4].split("_")[-1]
+population_size = best_experiment_name.split("__")[3].split("_")[-1]
+
 
 best_sol = np.loadtxt(best_experiment_name + "/best.txt")
 
 # iterate over enemies 1, 2, ..., 8.
 for e in range(1, 9):
-    EVOMAN_ENV_TEST.update_parameter("enemies", [e])
-    fitness, player_life, enemy_life, game_time = EVOMAN_ENV_TEST.play(best_sol)
+    for i in range(5):
+        EVOMAN_ENV_TEST.update_parameter("enemies", [e])
+        fitness, player_life, enemy_life, game_time = EVOMAN_ENV_TEST.play(best_sol)
 
-    with open(
-        "./results_of_best_against_all/test_results_all_enemies.txt",
-        "a",
-    ) as f:
-        f.write(
-            f"\n{best_experiment_name} {fitness} {player_life - enemy_life} {game_time} {e}"
-        )
-
-
-
-# best_experiment_name = "crossover_onepoint__mutation_0.2__enemies_28__population_100__generations_30__run_3/"
-# run = best_experiment_name.split('__')[-1].split('_')[-1]
-# mutation = best_experiment_name.split('__')[1].split('_')[-1]
-# crossover = best_experiment_name.split('__')[0].split('_')[-1]
-# enemies = best_experiment_name.split('__')[2].split('_')[-1]
-# num_generations = best_experiment_name.split('__')[4].split('_')[-1]
-# population_size = best_experiment_name.split('__')[3].split('_')[-1]
-#
-# with open("./test_results.txt", "a") as f:
-#     f.write(
-#         "\n\n\n" +
-#         "BEST SOLUTION FOR ALL ENEMIES"
-#     )
-#
-# num_runs = 5
-#
-# for run in range(num_runs):
-#     os.system(
-#         f"python execute_experiment.py --run {run} --mode test -m {mutation} -c {crossover} -e {' '.join(enemies)} -g {str(num_generations)} -p {str(population_size)}"
-#     )
+        with open(
+            "./test_best_against_all.txt",
+            "a",
+        ) as f:
+            f.write(
+                f"\n{best_experiment_name} {fitness} {player_life - enemy_life} {game_time} {e} {i}"
+            )

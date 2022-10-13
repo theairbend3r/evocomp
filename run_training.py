@@ -1,14 +1,10 @@
 import os
 import time
-import argparse
-from params import tuned_params
+from params import params, tuned_params
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-c", "--crossover", help="Crossover method e.g. uniform80")
-args = parser.parse_args()
 
-crossover = args.crossover
-enemies = [[2, 8], [5, 6]]
+crossover = tuned_params["crossover"]
+enemies = params["enemies"]
 mutation = tuned_params["mutation"]
 num_generations = tuned_params["num_generations"]
 population_size = tuned_params["population_size"]

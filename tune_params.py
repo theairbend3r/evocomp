@@ -18,7 +18,6 @@ if __name__ == "__main__":
             "num_generations",
             "mutation",
             "crossover",
-            "selection",
         ],
     )
 

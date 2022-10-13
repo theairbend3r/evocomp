@@ -1,14 +1,11 @@
 import os
 import time
-import argparse
 import pathlib
-from params import tuned_params
+from params import params, tuned_params
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-c", "--crossover", help="Crossover method e.g. uniform80")
-args = parser.parse_args()
 
-crossover = args.crossover
+crossover = tuned_params["crossover"]
+enemies = params["enemies"]
 mutation = tuned_params["mutation"]
 num_generations = tuned_params["num_generations"]
 population_size = tuned_params["population_size"]
@@ -16,8 +13,8 @@ population_size = tuned_params["population_size"]
 start_time = time.time()
 num_runs = 5
 
-with open("./test_results.txt", "a") as f:
-    f.write("\nfitness gain crossover run enemies")
+with open("./test_results_enemy_all.txt", "a") as f:
+    f.write("\nfitness gain experiment_name")
 
 paths = pathlib.Path("./")
 for d in paths.iterdir():

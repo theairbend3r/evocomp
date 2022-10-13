@@ -16,6 +16,7 @@ from evolution import (
     normalise_array,
     save_results,
     track_solution_improvement,
+    select_individuals_for_next_generation,
 )
 
 sys.path.insert(0, "evoman")
@@ -120,18 +121,14 @@ def test_experiment(experiment_name):
     fitness, player_life, enemy_life, game_time = EVOMAN_ENV.play(best_sol)
     print("\n RUNNING THE BEST SOLUTION \n")
 
-    with open("./test_results.txt", "a") as f:
+    with open("./test_results_enemy_all.txt", "a") as f:
         f.write(
             "\n"
             + str(fitness)
             + " "
             + str(player_life - enemy_life)
             + " "
-            + str(crossover)
-            + " "
-            + str(experiment_name.split("_")[-1])
-            + " "
-            + "".join(enemies)
+            + str(experiment_name)
         )
     end_time = time.time()
 
@@ -142,7 +139,6 @@ def execute_experiment(
     population_size: int,
     num_generations: int,
     create_offspring: Callable,
-    select_individuals_for_next_generation: Callable,
 ):
     # check environment state
     EVOMAN_ENV.state_to_log()
@@ -173,7 +169,7 @@ def execute_experiment(
     save_results(
         num_gen=0,
         experiment_name=experiment_name,
-        alltime_best_solution=alltime_best_solution,
+        current_best_solution=alltime_best_solution,
         population_fitness_mean=population_fitness_mean,
         population_fitness_std=population_fitness_std,
     )
@@ -188,7 +184,9 @@ def execute_experiment(
         generation_start_time = time.time()
 
         # generate offsprings via crossover+mutation between parents
-        offspring = create_offspring(population=population, population_fitness=population_fitness)
+        offspring = create_offspring(
+            population=population, population_fitness=population_fitness
+        )
 
         # evaluate the fitness of the offsprings
         offspring_fitness = evaluate(population=offspring)
@@ -206,9 +204,12 @@ def execute_experiment(
         population = population[unique_individuals_idx]
         population_fitness = population_fitness[unique_individuals_idx]
 
+        # track results
         current_best_individual = np.argmax(population_fitness)
         current_best_solution = population_fitness[current_best_individual]
-        current_best_solution_normalised = normalise_array(current_best_solution)
+        # current_best_solution_normalised = normalise_array(current_best_solution)
+        population_fitness_mean = np.mean(population_fitness)
+        population_fitness_std = np.std(population_fitness)
 
         # select a subset from the new population
         population, population_fitness = select_individuals_for_next_generation(
@@ -237,7 +238,7 @@ def execute_experiment(
         save_results(
             num_gen=gen,
             experiment_name=experiment_name,
-            alltime_best_solution=alltime_best_solution,
+            current_best_solution=current_best_solution,
             population_fitness_mean=population_fitness_mean,
             population_fitness_std=population_fitness_std,
         )
@@ -280,9 +281,6 @@ if __name__ == "__main__":
                 create_offspring,
                 mutation_percentage=mutation,
                 crossover_method=crossover,
-            ),
-            select_individuals_for_next_generation=partial(
-                select_individuals_for_next_generation, method="selection3"
             ),
         )
 

@@ -74,12 +74,20 @@ def create_lineplot():
 
 
 def create_boxplot_enemy_group():
-    test_df = pd.read_csv("./test_results.txt", delimiter=" ")
+    test_df = pd.read_csv("./test_results_enemy_all.txt", delimiter=" ")
     print(test_df)
 
+    test_df["crossover"] = [
+        en.split("__")[0].split("_")[-1] for en in test_df["experiment_name"].tolist()
+    ]
+    test_df["enemies"] = [
+        en.split("__")[2].split("_")[-1] for en in test_df["experiment_name"].tolist()
+    ]
+    test_df["run"] = [
+        en.split("__")[-1].split("_")[-1] for en in test_df["experiment_name"].tolist()
+    ]
     crossover = test_df["crossover"].unique().tolist()
     enemies = test_df["enemies"].unique().tolist()
-    print(crossover, enemies)
 
     fig, axes = plt.subplots(2, 2, figsize=(8, 6))
     fig.tight_layout()
@@ -92,7 +100,7 @@ def create_boxplot_enemy_group():
                     (test_df["crossover"] == crossover[c])
                     & (test_df["enemies"] == enemies[e])
                 ]
-                .groupby(["run"])["fitness"]
+                .groupby(["run"])["gain"]
                 .mean()
             )
 
@@ -114,8 +122,10 @@ def create_boxplot_enemy_group():
 
 
 def create_barplot():
-    df = pd.read_csv("./results_of_best_against_all/test_results_all_enemies.txt", delimiter=' ')
-    sns.barplot(data=df, x='enemy', y='gain').set(title='Best indvidual\'s gain against all enemies')
+    df = pd.read_csv("./test_best_against_all.txt", delimiter=" ")
+    sns.barplot(data=df, x="enemy", y="gain").set(
+        title="Best indvidual's gain against all enemies"
+    )
     plt.savefig("./barplot_enemies.png")
 
     plt.show()
