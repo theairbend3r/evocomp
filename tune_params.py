@@ -7,28 +7,33 @@ from params import params
 
 
 if __name__ == "__main__":
-    start_time = time.time()
-    params_combo = list(itertools.product(*[v for v in params.values()]))
+    user_input = input("Did you delete existing log files? (yes or no) ")
 
-    ParamRow = namedtuple(
-        "ParamRow",
-        [
-            "enemies",
-            "population_size",
-            "num_generations",
-            "mutation",
-            "crossover",
-        ],
-    )
+    if user_input == "yes":
+        start_time = time.time()
+        params_combo = list(itertools.product(*[v for v in params.values()]))
 
-    params_combo = [ParamRow(*pc) for pc in params_combo]
-
-    params_combo_list = []
-    for pc in params_combo:
-        # call execute_experiment
-        os.system(
-            f"python execute_experiment.py --run x --mode train -m {pc.mutation} -c {pc.crossover} -e {' '.join([str(e) for e in pc.enemies])} -g {str(pc.num_generations)} -p {str(pc.population_size)}"
+        ParamRow = namedtuple(
+            "ParamRow",
+            [
+                "enemies",
+                "population_size",
+                "num_generations",
+                "mutation",
+                "crossover",
+            ],
         )
 
-    end_time = time.time()
-    print(f"\n\nTime taken to tune all params = {end_time - start_time}")
+        params_combo = [ParamRow(*pc) for pc in params_combo]
+
+        params_combo_list = []
+        for pc in params_combo:
+            # call execute_experiment
+            os.system(
+                f"python execute_experiment.py --run x --mode train -m {pc.mutation} -c {pc.crossover} -e {' '.join([str(e) for e in pc.enemies])} -g {str(pc.num_generations)} -p {str(pc.population_size)}"
+            )
+
+        end_time = time.time()
+        print(f"\n\nTime taken to tune all params = {end_time - start_time}")
+    else:
+        print("Delete the logs first!")

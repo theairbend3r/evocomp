@@ -127,9 +127,6 @@ def crossover(parent_1: np.ndarray, parent_2: np.ndarray, method: str) -> tuple:
                 parent_1[:crossover_point] + parent_2[:crossover_point]
             ) / 2
 
-            print(offspring_1.shape)
-            print(offspring_2.shape)
-
             return offspring_1, offspring_2
         elif crossover_method == "blend":
             alpha = 0.5

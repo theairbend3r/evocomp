@@ -75,7 +75,6 @@ def create_lineplot():
 
 def create_boxplot_enemy_group():
     test_df = pd.read_csv("./test_results_enemy_all.txt", delimiter=" ")
-    print(test_df)
 
     test_df["crossover"] = [
         en.split("__")[0].split("_")[-1] for en in test_df["experiment_name"].tolist()
@@ -132,6 +131,13 @@ def create_barplot():
 
 
 if __name__ == "__main__":
-    create_lineplot()
-    create_boxplot_enemy_group()
-    create_barplot()
+
+    user_input = input(
+        "Did you run find_and_test_the_best_against_all.py? (yes or no) "
+    )
+    if user_input == "yes":
+        create_lineplot()
+        create_boxplot_enemy_group()
+        create_barplot()
+    else:
+        print("Run find_and_test_the_best_against_all.py first!")

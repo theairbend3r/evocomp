@@ -154,6 +154,7 @@ def execute_experiment(
 
     # track solution stats
     alltime_best_individual = np.argmax(population_fitness)
+    # alltime_best_fitness = population_fitness[alltime_best_individual]
     alltime_best_solution = population_fitness[alltime_best_individual]
     population_fitness_mean = np.mean(population_fitness)
     population_fitness_std = np.std(population_fitness)
@@ -203,18 +204,19 @@ def execute_experiment(
         population = population[unique_individuals_idx]
         population_fitness = population_fitness[unique_individuals_idx]
 
-        # track results
-        current_best_individual = np.argmax(population_fitness)
-        current_best_solution = population_fitness[current_best_individual]
-        population_fitness_mean = np.mean(population_fitness)
-        population_fitness_std = np.std(population_fitness)
-
         # select a subset from the new population
         population, population_fitness = select_individuals_for_next_generation(
             population=population,
             population_fitness=population_fitness,
             population_size=population_size,
         )
+
+        # track results
+        current_best_individual = np.argmax(population_fitness)
+        # current_best_fitness = population_fitness[current_best_individual]
+        current_best_solution = population_fitness[current_best_individual]
+        population_fitness_mean = np.mean(population_fitness)
+        population_fitness_std = np.std(population_fitness)
 
         # track solution for doomsday protocol
         solution_not_improved_count = track_solution_improvement(
@@ -231,6 +233,9 @@ def execute_experiment(
                 population=population, population_fitness=population_fitness
             )
 
+        if current_best_solution > alltime_best_solution:
+            alltime_best_individual = current_best_individual
+
         # save scores
         save_results(
             num_gen=gen,
@@ -244,7 +249,7 @@ def execute_experiment(
         with open(experiment_name + "/gen.txt", "w") as f:
             f.write(str(gen))
 
-        # saves file with the best solution
+        # saves file with the best solution/weights
         np.savetxt(experiment_name + "/best.txt", population[alltime_best_individual])
 
         # saves simulation state

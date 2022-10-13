@@ -26,9 +26,10 @@ for d in paths.iterdir():
         loop_run = d.name.split("__")[-1][-1]
 
         for run in range(num_runs):
-            os.system(
-                f"python execute_experiment.py --run {loop_run} --mode test -m {mutation} -c {crossover} -e {' '.join(d.name.split('__')[2].split('_')[-1])} -g {str(num_generations)} -p {str(population_size)}"
-            )
+            for c in crossover:
+                os.system(
+                    f"python execute_experiment.py --run {loop_run} --mode test -m {mutation} -c {c} -e {' '.join(d.name.split('__')[2].split('_')[-1])} -g {str(num_generations)} -p {str(population_size)}"
+                )
 end_time = time.time()
 
 print(f"Time taken for testing = {end_time - start_time} seconds")
