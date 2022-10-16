@@ -25,4 +25,4 @@ if user_input == "yes":
         f"Time taken for {num_runs * len(enemies)} run ({num_runs} runs for {len(enemies)} enemies) = {end_time - start_time} seconds"
     )
 else:
-    print("Run find_best_params_after_tuning.py first!")
+    print("\n\nRun find_best_params_after_tuning.py first!")

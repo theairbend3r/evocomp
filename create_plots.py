@@ -3,6 +3,9 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+sns.set_style("whitegrid")
+sns.set(font_scale=1.5, rc={"text.usetex": True})
+
 
 def create_lineplot():
     paths = pathlib.Path("./")
@@ -126,8 +129,12 @@ def create_boxplot_enemy_group():
 
 def create_barplot():
     df = pd.read_csv("./test_best_against_all.txt", delimiter=" ")
-    sns.barplot(data=df, x="enemy", y="gain").set(
-        title="Best indvidual's gain against all enemies"
+    df["EA"] = [
+        x.split("__")[0].split("_")[1].split("-")[0] for x in df["experiment_name"]
+    ]
+    plt.figure(figsize=(8, 6))
+    sns.barplot(data=df, x="enemy", y="gain", hue="EA").set(
+        title="Best Indvidual's Gain vs All Enemies"
     )
     plt.savefig("./barplot_enemies.png")
 
@@ -144,4 +151,4 @@ if __name__ == "__main__":
         create_boxplot_enemy_group()
         create_barplot()
     else:
-        print("Run find_and_test_the_best_against_all.py first!")
+        print("\n\nRun find_and_test_the_best_against_all.py first!")
