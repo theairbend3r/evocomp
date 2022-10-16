@@ -25,13 +25,17 @@ def create_lineplot():
         train_df.append(df)
 
     train_df = pd.concat(train_df)
+    train_df = train_df[~train_df.isin(["gen"]).any(axis=1)]
     train_df = train_df.reset_index(drop=True)
+    train_df["mean"] = [float(n) for n in train_df["mean"]]
+    train_df["best"] = [float(n) for n in train_df["best"]]
 
     crossover = train_df["crossover"].unique().tolist()
     enemies = train_df["enemies"].unique().tolist()
 
     fig, axes = plt.subplots(2, 2, figsize=(8, 6), sharex=True, sharey=True)
     fig.suptitle("Best and Average Fitness for EA-Enemy Combo")
+
     for e in range(len(enemies)):
         for c in range(len(crossover)):
             # entities to plot
@@ -40,7 +44,7 @@ def create_lineplot():
                     (train_df["crossover"] == crossover[c])
                     & (train_df["enemies"] == enemies[e])
                 ]
-                .groupby(["gen"])["mean"]
+                .groupby("gen")["mean"]
                 .mean()
             )
 
@@ -49,7 +53,7 @@ def create_lineplot():
                     (train_df["crossover"] == crossover[c])
                     & (train_df["enemies"] == enemies[e])
                 ]
-                .groupby(["gen"])["best"]
+                .groupby("gen")["best"]
                 .mean()
             )
 

@@ -14,7 +14,6 @@ for d in paths.iterdir():
         and d.name.split("__")[-1][-1] == "x"
     ):
         df = pd.read_csv(f"./{d.name}/results.txt", delimiter=" ")
-        print(df)
         best_mean_across_all_generations = df["best"].mean()
         if best_mean_across_all_generations > best_mean_fitness:
             best_mean_fitness = best_mean_across_all_generations
