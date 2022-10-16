@@ -21,7 +21,7 @@ from evolution import (
 sys.path.insert(0, "evoman")
 from environment import Environment
 
-np.random.seed(69)
+# np.random.seed(69)
 
 # run experiement headless.
 os.environ["SDL_VIDEODRIVER"] = "dummy"
